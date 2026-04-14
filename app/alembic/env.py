@@ -8,6 +8,7 @@ def run_migrations_online() -> None:
     if connectable is None:
         raise RuntimeError("No connection provided in alembic config attributes.")
 
+    context.configure(connection=connectable)
     with context.begin_transaction():
         context.run_migrations()
 

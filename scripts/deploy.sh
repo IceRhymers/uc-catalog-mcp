@@ -47,13 +47,35 @@ cmd_deploy() {
 }
 
 cmd_migrate() {
-  echo "==> Running database migrations..."
-  uv run python scripts/migrate.py
+  local app_name instance_name
+  app_name="$(resolve_app_name)"
+  instance_name="$(resolve_instance_name)"
+  echo "==> Running database migrations (app=$app_name, instance=$instance_name)..."
+  uv run python scripts/migrate.py --app-name "$app_name" --instance "$instance_name"
 }
 
 cmd_start() {
   echo "==> Starting app (target=$TARGET)..."
   databricks bundle run uc_catalog_mcp --target "$TARGET"
+}
+
+_bundle_json=""
+_resolve_bundle_json() {
+  if [[ -z "$_bundle_json" ]]; then
+    _bundle_json="$(databricks bundle validate --target "$TARGET" -o json 2>/dev/null)"
+  fi
+}
+
+resolve_app_name() {
+  _resolve_bundle_json
+  echo "$_bundle_json" \
+    | python3 -c "import sys,json; b=json.load(sys.stdin); print(list(b['resources']['apps'].values())[0]['name'])"
+}
+
+resolve_instance_name() {
+  _resolve_bundle_json
+  echo "$_bundle_json" \
+    | python3 -c "import sys,json; b=json.load(sys.stdin); print(list(b['resources']['database_instances'].values())[0]['name'])"
 }
 
 cmd_full() {
@@ -65,8 +87,10 @@ cmd_full() {
 }
 
 cmd_stop() {
-  echo "==> Stopping app (target=$TARGET)..."
-  databricks apps stop uc-catalog-mcp
+  local app_name
+  app_name="$(resolve_app_name)"
+  echo "==> Stopping app ($app_name)..."
+  databricks apps stop "$app_name"
 }
 
 case "$COMMAND" in

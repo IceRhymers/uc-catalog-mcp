@@ -9,7 +9,7 @@ Usage:
 
 Options:
     --app-name NAME       Databricks App name (default: uc-catalog-mcp)
-    --instance NAME       Lakebase instance name (default: uc-catalog-mcp)
+    --instance NAME       Lakebase instance name (default: uc-catalog-mcp-db)
     --sp-username USER    Override SP Postgres username (skips auto-detection)
 """
 
@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import os
-import sys
 
 import psycopg
 from databricks.sdk import WorkspaceClient
@@ -133,7 +132,7 @@ def main() -> None:
         description="Lakebase migration: grant SP permissions + create tables"
     )
     parser.add_argument("--app-name", default="uc-catalog-mcp")
-    parser.add_argument("--instance", default="uc-catalog-mcp")
+    parser.add_argument("--instance", default="uc-catalog-mcp-db")
     parser.add_argument("--sp-username", default=None)
     args = parser.parse_args()
 
@@ -152,6 +151,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    app_dir = os.path.join(os.path.dirname(__file__), "..", "app")
-    sys.path.insert(0, os.path.abspath(app_dir))
     main()
