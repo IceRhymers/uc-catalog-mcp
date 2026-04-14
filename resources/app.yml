@@ -11,5 +11,5 @@ resources:
             instance_name: ${resources.database_instances.uc_catalog_db.name}
             permission: CAN_CONNECT_AND_CREATE
       permissions:
-        - user_name: account users
+        - group_name: account users
           level: CAN_USE
