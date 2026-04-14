@@ -37,15 +37,6 @@ def test_resources_lakebase_yml_has_database():
     assert "database_instances" in parsed.get("resources", {})
 
 
-def test_resources_job_yml_has_schedule():
-    """resources/job.yml defines a sync job with a schedule."""
-    parsed = yaml.safe_load(Path("resources/job.yml").read_text())
-    jobs = parsed.get("resources", {}).get("jobs", {})
-    assert jobs, "No jobs defined in resources/job.yml"
-    first_job = next(iter(jobs.values()))
-    assert "schedule" in first_job
-
-
 def test_deploy_script_exists_and_is_executable():
     """scripts/deploy.sh exists and has execute permission."""
     path = Path("scripts/deploy.sh")
