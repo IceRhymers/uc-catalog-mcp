@@ -7,7 +7,6 @@ yields a SQLAlchemy Session.
 
 from __future__ import annotations
 
-import os
 from collections.abc import Generator
 
 from fastapi import Request
@@ -18,15 +17,17 @@ from sqlalchemy.orm import Session
 def create_lakebase_engine(instance_name: str, ws_client) -> Engine:
     """Build a SQLAlchemy engine for Lakebase with automatic token refresh.
 
-    Uses the Databricks SDK to generate a fresh database credential on every
-    new connection via the do_connect event, so tokens never go stale.
+    Resolves the instance host via the Databricks SDK
+    (ws.database.get_database_instance), so no environment variables are needed
+    for the host. Token is refreshed on every new connection via the do_connect
+    event — credentials never go stale.
     """
-    host = os.environ["LAKEBASE_HOST"]
-    database = os.environ.get("LAKEBASE_DATABASE", "databricks_postgres")
+    instance = ws_client.database.get_database_instance(instance_name)
+    host = instance.read_write_dns
     me = ws_client.current_user.me()
     username = me.user_name
 
-    url = f"postgresql+psycopg://{username}:@{host}:5432/{database}"
+    url = f"postgresql+psycopg://{username}:@{host}:5432/databricks_postgres"
     engine = create_engine(url, connect_args={"sslmode": "require"})
 
     @event.listens_for(engine, "do_connect")

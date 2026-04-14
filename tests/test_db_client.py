@@ -38,31 +38,21 @@ def test_get_db_closes_on_teardown():
     mock_session.close.assert_called_once()
 
 
-def test_create_engine_uses_env_vars():
-    """create_lakebase_engine() reads LAKEBASE_HOST from env; raises if missing."""
-    from app.db.client import create_lakebase_engine
-
-    mock_ws = MagicMock()
-    mock_ws.current_user.me.return_value = MagicMock(user_name="test@example.com")
-
-    with pytest.raises(KeyError):
-        # LAKEBASE_HOST not set — should raise
-        env = {k: v for k, v in os.environ.items() if k != "LAKEBASE_HOST"}
-        with patch.dict(os.environ, env, clear=True):
-            create_lakebase_engine("test-instance", mock_ws)
-
-
-def test_create_engine_returns_engine_with_host():
-    """create_lakebase_engine() returns an engine when LAKEBASE_HOST is set."""
+def test_create_engine_resolves_host_via_sdk():
+    """create_lakebase_engine() resolves host from ws.database.get_database_instance()."""
     from sqlalchemy import Engine
 
     from app.db.client import create_lakebase_engine
 
     mock_ws = MagicMock()
+    mock_ws.database.get_database_instance.return_value = MagicMock(
+        read_write_dns="test-instance.db.databricks.com"
+    )
     mock_ws.current_user.me.return_value = MagicMock(user_name="test@example.com")
 
-    with patch.dict(os.environ, {"LAKEBASE_HOST": "test-host.db.databricks.com"}):
-        engine = create_lakebase_engine("test-instance", mock_ws)
+    engine = create_lakebase_engine("test-instance", mock_ws)
+
+    mock_ws.database.get_database_instance.assert_called_once_with("test-instance")
     assert isinstance(engine, Engine)
     engine.dispose()
 
