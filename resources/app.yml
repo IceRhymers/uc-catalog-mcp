@@ -1,0 +1,15 @@
+resources:
+  apps:
+    uc_catalog_mcp:
+      name: "uc-catalog-mcp"
+      description: "MCP server for semantic Unity Catalog discovery"
+      source_code_path: ../app
+      resources:
+        - name: uc-catalog-db
+          database:
+            database_name: databricks_postgres
+            instance_name: ${resources.database_instances.uc_catalog_db.name}
+            permission: CAN_CONNECT_AND_CREATE
+      permissions:
+        - user_name: account users
+          level: CAN_USE

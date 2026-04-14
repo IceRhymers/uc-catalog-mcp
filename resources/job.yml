@@ -1,0 +1,12 @@
+resources:
+  jobs:
+    uc_catalog_sync:
+      name: "uc-catalog-sync"
+      description: "Incremental sync of Unity Catalog metadata to Lakebase (fleshed out in issue #6)"
+      schedule:
+        quartz_cron_expression: "${var.sync_schedule}"
+        timezone_id: "UTC"
+      tasks:
+        - task_key: sync
+          notebook_task:
+            notebook_path: ./sync/job.py
