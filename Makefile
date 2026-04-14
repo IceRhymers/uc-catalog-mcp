@@ -4,7 +4,7 @@ test:
 	pytest tests/ -v
 
 lint:
-	ruff check . && ruff format --check .
+	uv run ruff check . && uv run ruff format --check .
 
 run:
 	uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
@@ -29,7 +29,7 @@ sync:
 
 # CI gate: lint + format check.
 check:
-	make lint fmt-check
+	make lint
 
 # Auto-fix formatting.
 fmt:
@@ -38,3 +38,4 @@ fmt:
 # Check formatting without fixing (used by CI).
 fmt-check:
 	uv run ruff format --check app/ tests/
+
