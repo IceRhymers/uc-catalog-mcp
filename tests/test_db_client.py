@@ -1,9 +1,6 @@
 """Tests for app/db/client.py — written RED-first before implementation."""
 
-import os
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 
 def test_get_db_yields_session():
@@ -62,7 +59,6 @@ def test_no_fstring_sql_in_module():
     from pathlib import Path
 
     source = Path("app/db/client.py").read_text()
-    # f-strings used for the connection URL are OK; check for f-string SQL queries
     sql_keywords = ["SELECT", "INSERT", "UPDATE", "DELETE", "CREATE", "DROP"]
     for line in source.splitlines():
         if line.strip().startswith("#"):
