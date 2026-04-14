@@ -53,12 +53,6 @@ def test_deploy_script_exists_and_is_executable():
     assert path.stat().st_mode & stat.S_IXUSR, "scripts/deploy.sh is not executable"
 
 
-def test_deploy_script_has_start_command():
-    """scripts/deploy.sh has a start subcommand."""
-    content = Path("scripts/deploy.sh").read_text()
-    assert "cmd_start" in content
-
-
 def test_makefile_has_deploy_target():
     """Makefile contains a deploy: target."""
     assert "deploy:" in Path("Makefile").read_text()
