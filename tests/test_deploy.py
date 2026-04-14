@@ -71,4 +71,3 @@ def test_makefile_has_sync_target():
     """Makefile contains a sync: target."""
     content = Path("Makefile").read_text()
     assert "sync:" in content
-
