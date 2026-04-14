@@ -1,42 +1,22 @@
-import datetime
+import dataclasses
 from pathlib import Path
 
 
 def test_column_metadata_fields():
     from app.db.models import ColumnMetadata
 
-    obj = ColumnMetadata(name="id", type="BIGINT", comment="primary key")
-    assert obj.name == "id"
-    assert obj.type == "BIGINT"
-    assert obj.comment == "primary key"
+    fields = {f.name for f in dataclasses.fields(ColumnMetadata)}
+    assert fields == {"name", "type", "comment"}
 
 
 def test_catalog_metadata_fields():
-    from app.db.models import CatalogMetadata, ColumnMetadata
+    from app.db.models import CatalogMetadata
 
-    col = ColumnMetadata(name="id", type="BIGINT", comment=None)
-    obj = CatalogMetadata(
-        full_name="main.default.users",
-        catalog="main",
-        schema_name="default",
-        table_name="users",
-        table_type="MANAGED",
-        comment="User table",
-        columns=[col],
-        content_hash="abc123",
-        embedding=[0.1] * 1024,
-        synced_at=datetime.datetime.now(tz=datetime.timezone.utc),
-    )
-    assert obj.full_name == "main.default.users"
-    assert obj.catalog == "main"
-    assert obj.schema_name == "default"
-    assert obj.table_name == "users"
-    assert obj.table_type == "MANAGED"
-    assert obj.comment == "User table"
-    assert len(obj.columns) == 1
-    assert obj.content_hash == "abc123"
-    assert len(obj.embedding) == 1024
-    assert obj.synced_at is not None
+    expected = {
+        "full_name", "catalog", "schema_name", "table_name", "table_type",
+        "comment", "columns", "content_hash", "embedding", "synced_at",
+    }
+    assert {f.name for f in dataclasses.fields(CatalogMetadata)} == expected
 
 
 def test_migration_sql_creates_extension():
