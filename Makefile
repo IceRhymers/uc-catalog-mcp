@@ -15,9 +15,9 @@ run:
 setup-db:
 	uv run python scripts/migrate.py
 
-# Full deployment: bundle deploy + migrations + initial sync trigger.
+# Full deployment: build + validate + bundle deploy + migrate + start app.
 deploy:
-	bash scripts/deploy.sh
+	bash scripts/deploy.sh full
 
 # Run Alembic migrations only (no SP grant, no bundle deploy).
 migrate:
@@ -25,7 +25,7 @@ migrate:
 
 # Manually trigger the sync job via Databricks CLI.
 sync:
-	databricks bundle run uc-catalog-sync
+	databricks bundle run uc_catalog_sync
 
 # CI gate: lint + format check.
 check:
@@ -38,4 +38,3 @@ fmt:
 # Check formatting without fixing (used by CI).
 fmt-check:
 	uv run ruff format --check app/ tests/
-

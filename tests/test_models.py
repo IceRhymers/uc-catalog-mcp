@@ -13,8 +13,16 @@ def test_catalog_metadata_fields():
     from app.db.models import CatalogMetadata
 
     expected = {
-        "full_name", "catalog", "schema_name", "table_name", "table_type",
-        "comment", "columns", "content_hash", "embedding", "synced_at",
+        "full_name",
+        "catalog",
+        "schema_name",
+        "table_name",
+        "table_type",
+        "comment",
+        "columns",
+        "content_hash",
+        "embedding",
+        "synced_at",
     }
     assert {f.name for f in dataclasses.fields(CatalogMetadata)} == expected
 

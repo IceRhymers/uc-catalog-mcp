@@ -1,0 +1,24 @@
+bundle:
+  name: uc-catalog-mcp
+
+variables:
+  lakebase_instance:
+    description: "Lakebase instance name for vector storage"
+    default: uc-catalog-mcp-db
+  catalog_allowlist:
+    description: "Comma-separated list of Unity Catalog catalogs to index"
+    default: ""
+  sync_schedule:
+    description: "Cron schedule for the sync job (quartz format)"
+    default: "0 */6 * * *"
+
+include:
+  - resources/*.yml
+
+targets:
+  dev:
+    mode: development
+    default: true
+
+  prod:
+    mode: production

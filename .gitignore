@@ -1,0 +1,5 @@
+.env
+.omc/
+.databricks/
+.venv/
+__pycache__/
