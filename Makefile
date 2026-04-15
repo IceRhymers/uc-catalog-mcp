@@ -1,11 +1,13 @@
 .PHONY: test test-integration lint run setup-db deploy migrate sync check fmt fmt-check
 
+venv:
+	uv sync
+
 test:
-	pytest tests/ -v
+	uv run pytest tests/ -v
 
 # Run integration tests (requires Databricks credentials — not run in CI).
-test-integration:
-	uv sync --group spark
+test-integration: venv
 	uv run pytest integration/ -v
 
 lint:
