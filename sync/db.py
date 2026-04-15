@@ -85,15 +85,32 @@ def upsert_partition(rows, instance_name: str) -> None:
             for row in rows:
                 cur.execute(
                     """
-                    INSERT INTO catalog_metadata (full_name, content, embedding, content_hash)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO catalog_metadata
+                        (full_name, catalog, schema_name, table_name,
+                         table_type, comment, columns, content_hash, embedding)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
                     ON CONFLICT (full_name) DO UPDATE SET
-                        content = EXCLUDED.content,
-                        embedding = EXCLUDED.embedding,
+                        catalog = EXCLUDED.catalog,
+                        schema_name = EXCLUDED.schema_name,
+                        table_name = EXCLUDED.table_name,
+                        table_type = EXCLUDED.table_type,
+                        comment = EXCLUDED.comment,
+                        columns = EXCLUDED.columns,
                         content_hash = EXCLUDED.content_hash,
-                        updated_at = now()
+                        embedding = EXCLUDED.embedding,
+                        synced_at = now()
                     """,
-                    (row["full_name"], row["content"], row["embedding"], row["content_hash"]),
+                    (
+                        row["full_name"],
+                        row["catalog"],
+                        row["schema_name"],
+                        row["table_name"],
+                        row["table_type"],
+                        row["comment"],
+                        row["columns"],
+                        row["content_hash"],
+                        row["embedding"],
+                    ),
                 )
         conn.commit()
 

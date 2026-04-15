@@ -71,15 +71,16 @@ def run_sync() -> dict:
 
     # 3. Query system tables
     tables_df = spark.sql(f"""
-        SELECT table_catalog, table_schema, table_name, comment
+        SELECT table_catalog, table_schema, table_name, table_type, comment
         FROM system.information_schema.tables
         WHERE {where_clause}
-          AND table_type = 'BASE TABLE'
+          AND table_schema != 'information_schema'
     """)
     cols_df = spark.sql(f"""
         SELECT table_catalog, table_schema, table_name, column_name, data_type, comment
         FROM system.information_schema.columns
         WHERE {where_clause}
+          AND table_schema != 'information_schema'
     """)
 
     table_rows = tables_df.collect()
@@ -100,7 +101,16 @@ def run_sync() -> dict:
         cols = cols_by_table.get(full_name, [])
         content = build_content_string(full_name, row.comment, cols)
         content_hash = compute_content_hash(full_name, row.comment, cols)
-        tables[full_name] = {"content": content, "content_hash": content_hash}
+        tables[full_name] = {
+            "content": content,
+            "content_hash": content_hash,
+            "catalog": row.table_catalog,
+            "schema_name": row.table_schema,
+            "table_name": row.table_name,
+            "table_type": getattr(row, "table_type", None),
+            "comment": row.comment,
+            "columns": json.dumps([c._asdict() for c in cols]),
+        }
 
     # 5–7. Lakebase diff + embed + upsert
     ws = WorkspaceClient()
@@ -124,12 +134,19 @@ def run_sync() -> dict:
                     "full_name": r["full_name"],
                     "content": r["content"],
                     "content_hash": r["content_hash"],
+                    "catalog": r["catalog"],
+                    "schema_name": r["schema_name"],
+                    "table_name": r["table_name"],
+                    "table_type": r["table_type"],
+                    "comment": r["comment"],
+                    "columns": r["columns"],
                 }
                 for r in to_embed
             ]
         )
         result_df = embed_dataframe(embed_df, "content")
-        result_df.foreachPartition(lambda rows: upsert_partition(rows, instance_name))
+        embedded_rows = result_df.collect()
+        upsert_partition(embedded_rows, instance_name)
 
     # 9. Delete removed tables (only within allowed namespaces)
     allowed_catalogs = {e.catalog for e in entries}

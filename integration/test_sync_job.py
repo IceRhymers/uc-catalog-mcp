@@ -53,4 +53,3 @@ def test_sync_job_idempotent():
     assert stats2["skipped"] == stats1["scanned"], (
         f"Second run skipped={stats2['skipped']} but first scanned={stats1['scanned']}"
     )
-

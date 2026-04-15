@@ -114,7 +114,12 @@ def test_upsert_partition_calls_on_conflict():
     rows = [
         {
             "full_name": "main.db.tbl",
-            "content": "text",
+            "catalog": "main",
+            "schema_name": "db",
+            "table_name": "tbl",
+            "table_type": "MANAGED",
+            "comment": "text",
+            "columns": "[]",
             "embedding": [0.1, 0.2],
             "content_hash": "abc",
         },
@@ -144,7 +149,17 @@ def test_upsert_partition_commits():
     from sync.db import upsert_partition
 
     rows = [
-        {"full_name": "a.b.c", "content": "x", "embedding": [], "content_hash": "h"},
+        {
+            "full_name": "a.b.c",
+            "catalog": "a",
+            "schema_name": "b",
+            "table_name": "c",
+            "table_type": "MANAGED",
+            "comment": "x",
+            "columns": "[]",
+            "embedding": [],
+            "content_hash": "h",
+        },
     ]
     mock_ws = _make_ws()
     mock_conn = MagicMock()
