@@ -4,6 +4,7 @@ ColumnInfo is the single source of truth for column metadata shared between
 the sync pipeline (Spark cluster) and the app (Databricks App venv).
 Both environments import from this module — sync/ never imports from app/.
 """
+
 from typing import NamedTuple
 
 

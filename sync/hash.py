@@ -3,6 +3,7 @@
 Computes a deterministic hash of a table's metadata — used to detect changes
 without calling the embedding API on every sync cycle.
 """
+
 import hashlib
 
 from sync.types import ColumnInfo
@@ -28,9 +29,7 @@ def build_content_string(
         Canonical content string.
     """
     sorted_cols = sorted(columns, key=lambda c: c.name)
-    col_parts = ", ".join(
-        f"{c.name} ({c.type}): {c.comment or ''}" for c in sorted_cols
-    )
+    col_parts = ", ".join(f"{c.name} ({c.type}): {c.comment or ''}" for c in sorted_cols)
     return f"{full_name}: {comment or ''}. Columns: {col_parts}"
 
 

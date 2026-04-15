@@ -1,6 +1,7 @@
 """Tests for sync/hash.py — SHA-256 content hash for incremental ETL."""
+
 from sync.types import ColumnInfo
-from sync.hash import build_content_string, compute_content_hash
+from sync.hash import compute_content_hash
 
 
 def test_hash_deterministic():
@@ -40,7 +41,9 @@ def test_hash_changes_on_column_comment_change():
 def test_hash_stable_on_column_order():
     cols_ab = [ColumnInfo("a", "INT"), ColumnInfo("b", "INT")]
     cols_ba = [ColumnInfo("b", "INT"), ColumnInfo("a", "INT")]
-    assert compute_content_hash("main.s.t", None, cols_ab) == compute_content_hash("main.s.t", None, cols_ba)
+    assert compute_content_hash("main.s.t", None, cols_ab) == compute_content_hash(
+        "main.s.t", None, cols_ba
+    )
 
 
 def test_hash_handles_none_comment():

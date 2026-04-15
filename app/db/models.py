@@ -5,6 +5,7 @@ from pgvector.sqlalchemy import Vector
 from sqlalchemy import Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sync.types import ColumnInfo as ColumnMetadata
 
 
 class Base(DeclarativeBase):
@@ -28,15 +29,6 @@ class CatalogMetadataOrm(Base):
     synced_at: Mapped[datetime.datetime | None] = mapped_column(
         nullable=True, server_default=func.now()
     )
-
-
-@dataclasses.dataclass
-class ColumnMetadata:
-    """A single column in a Unity Catalog table (stored as JSONB in catalog_metadata)."""
-
-    name: str
-    type: str
-    comment: str | None = None
 
 
 @dataclasses.dataclass
