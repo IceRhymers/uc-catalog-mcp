@@ -15,10 +15,12 @@ import os
 
 import pytest
 
-# Skip entire module in CI (no Databricks credentials)
+# Explicit opt-in flag — set RUN_INTEGRATION_TESTS=1 to run locally.
+# DATABRICKS_HOST is not used here; the SDK picks up credentials from its
+# own config chain (.databrickscfg, env vars, etc.).
 pytestmark = pytest.mark.skipif(
-    os.environ.get("DATABRICKS_HOST") is None,
-    reason="Integration test requires DATABRICKS_HOST — skipped in CI",
+    os.environ.get("RUN_INTEGRATION_TESTS") != "1",
+    reason="Set RUN_INTEGRATION_TESTS=1 to run integration tests locally",
 )
 
 

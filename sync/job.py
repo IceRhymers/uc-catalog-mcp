@@ -52,17 +52,25 @@ def _build_allowlist_sql_filter(entries: list[AllowlistEntry]) -> tuple[str, lis
     return "(" + " OR ".join(clauses) + ")", []
 
 
-def run_sync() -> dict:
+def run_sync(
+    *,
+    catalog_allowlist: str | None = None,
+    lakebase_instance_name: str | None = None,
+) -> dict:
     """Run the full ETL sync cycle.
 
-    Reads CATALOG_ALLOWLIST (JSON list) and LAKEBASE_INSTANCE_NAME from env.
+    Args:
+        catalog_allowlist: JSON list of catalogs (e.g. '["main"]').
+            Falls back to CATALOG_ALLOWLIST env var.
+        lakebase_instance_name: Lakebase instance name.
+            Falls back to LAKEBASE_INSTANCE_NAME env var.
 
     Returns:
         Dict with keys: scanned, skipped, embedded, deleted.
     """
     # 1. Parse allowlist
-    raw_allowlist = json.loads(os.environ["CATALOG_ALLOWLIST"])
-    instance_name = os.environ["LAKEBASE_INSTANCE_NAME"]
+    raw_allowlist = json.loads(catalog_allowlist or os.environ["CATALOG_ALLOWLIST"])
+    instance_name = lakebase_instance_name or os.environ["LAKEBASE_INSTANCE_NAME"]
     entries = parse_allowlist(raw_allowlist)
     where_clause, _ = _build_allowlist_sql_filter(entries)
 
@@ -71,15 +79,16 @@ def run_sync() -> dict:
 
     # 3. Query system tables
     tables_df = spark.sql(f"""
-        SELECT table_catalog, table_schema, table_name, comment
+        SELECT table_catalog, table_schema, table_name, table_type, comment
         FROM system.information_schema.tables
         WHERE {where_clause}
-          AND table_type = 'BASE TABLE'
+          AND table_schema != 'information_schema'
     """)
     cols_df = spark.sql(f"""
         SELECT table_catalog, table_schema, table_name, column_name, data_type, comment
         FROM system.information_schema.columns
         WHERE {where_clause}
+          AND table_schema != 'information_schema'
     """)
 
     table_rows = tables_df.collect()
@@ -100,7 +109,16 @@ def run_sync() -> dict:
         cols = cols_by_table.get(full_name, [])
         content = build_content_string(full_name, row.comment, cols)
         content_hash = compute_content_hash(full_name, row.comment, cols)
-        tables[full_name] = {"content": content, "content_hash": content_hash}
+        tables[full_name] = {
+            "content": content,
+            "content_hash": content_hash,
+            "catalog": row.table_catalog,
+            "schema_name": row.table_schema,
+            "table_name": row.table_name,
+            "table_type": getattr(row, "table_type", None),
+            "comment": row.comment,
+            "columns": json.dumps([c._asdict() for c in cols]),
+        }
 
     # 5–7. Lakebase diff + embed + upsert
     ws = WorkspaceClient()
@@ -124,12 +142,19 @@ def run_sync() -> dict:
                     "full_name": r["full_name"],
                     "content": r["content"],
                     "content_hash": r["content_hash"],
+                    "catalog": r["catalog"],
+                    "schema_name": r["schema_name"],
+                    "table_name": r["table_name"],
+                    "table_type": r["table_type"],
+                    "comment": r["comment"],
+                    "columns": r["columns"],
                 }
                 for r in to_embed
             ]
         )
         result_df = embed_dataframe(embed_df, "content")
-        result_df.foreachPartition(lambda rows: upsert_partition(rows, instance_name))
+        embedded_rows = result_df.collect()
+        upsert_partition(embedded_rows, instance_name)
 
     # 9. Delete removed tables (only within allowed namespaces)
     allowed_catalogs = {e.catalog for e in entries}
@@ -151,6 +176,28 @@ def run_sync() -> dict:
         stats,
     )
     return stats
+
+
+def _parse_argv() -> dict:
+    """Parse --key=value pairs from sys.argv (Databricks named_parameters)."""
+    import sys
+
+    params = {}
+    for arg in sys.argv[1:]:
+        if arg.startswith("--") and "=" in arg:
+            key, value = arg[2:].split("=", 1)
+            params[key] = value
+    return params
+
+
+def main() -> None:
+    """Console script entry point for the uc-catalog-sync wheel task.
+
+    Databricks serverless python_wheel_task passes named_parameters
+    as --key=value in sys.argv. Falls back to env vars for local dev.
+    """
+    logging.basicConfig(level=logging.INFO)
+    run_sync(**_parse_argv())
 
 
 if __name__ == "__main__":

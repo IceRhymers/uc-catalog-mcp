@@ -1,0 +1,32 @@
+artifacts:
+  uc_catalog_mcp_whl:
+    type: whl
+    build: uv build
+    path: ..
+
+resources:
+  jobs:
+    uc_catalog_sync:
+      name: "uc-catalog-sync"
+      tasks:
+        - task_key: sync
+          python_wheel_task:
+            package_name: uc-catalog-mcp
+            entry_point: uc-catalog-sync
+            named_parameters:
+              catalog_allowlist: "${var.catalog_allowlist}"
+              lakebase_instance_name: "${var.lakebase_instance}"
+          environment_key: serverless
+      schedule:
+        quartz_cron_expression: "${var.sync_schedule}"
+        timezone_id: UTC
+        pause_status: UNPAUSED
+      queue:
+        enabled: true
+      environments:
+        - environment_key: serverless
+          spec:
+            client: "5"
+            dependencies:
+              - ../dist/*.whl
+

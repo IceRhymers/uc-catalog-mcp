@@ -15,8 +15,11 @@ dependencies = [
     "pgvector>=0.3",
     "sqlalchemy>=2.0",
     "alembic>=1.13",
-    "databricks-sdk>=0.28",
+    "databricks-sdk>=0.78",
 ]
+
+[project.scripts]
+uc-catalog-sync = "sync.job:main"
 
 [dependency-groups]
 dev = [
@@ -28,7 +31,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
+log_cli = true
+log_cli_level = "INFO"
+log_cli_format = "%(asctime)s [%(levelname)8s] %(message)s (%(filename)s:%(lineno)s)"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 
 [tool.setuptools.packages.find]
 where = ["."]

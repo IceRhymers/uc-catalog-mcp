@@ -130,7 +130,7 @@ def test_embeds_new_tables(monkeypatch):
     mock_ws.database.generate_database_credential.return_value.token = "tok"
 
     embedded_df = MagicMock()
-    embedded_df.foreachPartition = MagicMock()
+    embedded_df.collect.return_value = []
     embed_mock = MagicMock(return_value=embedded_df)
 
     monkeypatch.setenv("CATALOG_ALLOWLIST", json.dumps(["main"]))
@@ -140,6 +140,7 @@ def test_embeds_new_tables(monkeypatch):
         patch("sync.job.create_spark_session", return_value=spark),
         patch("sync.job.WorkspaceClient", return_value=mock_ws),
         patch("sync.job.embed_dataframe", embed_mock),
+        patch("sync.job.upsert_partition"),
         patch("sync.job.get_lakebase_jdbc_url", return_value=("jdbc:...", {})),
         patch("sync.job.fetch_existing_hashes", return_value={}),
     ):
@@ -151,6 +152,7 @@ def test_embeds_new_tables(monkeypatch):
             patch("sync.job.create_spark_session", return_value=spark),
             patch("sync.job.WorkspaceClient", return_value=mock_ws),
             patch("sync.job.embed_dataframe", embed_mock),
+            patch("sync.job.upsert_partition"),
             patch("sync.job.get_lakebase_jdbc_url", return_value=("jdbc:...", {})),
             patch("sync.job.fetch_existing_hashes", return_value={}),
         ):
@@ -178,7 +180,7 @@ def test_embeds_changed_tables(monkeypatch):
     mock_ws.database.generate_database_credential.return_value.token = "tok"
 
     embedded_df = MagicMock()
-    embedded_df.foreachPartition = MagicMock()
+    embedded_df.collect.return_value = []
     embed_mock = MagicMock(return_value=embedded_df)
 
     monkeypatch.setenv("CATALOG_ALLOWLIST", json.dumps(["main"]))
@@ -188,6 +190,7 @@ def test_embeds_changed_tables(monkeypatch):
         patch("sync.job.create_spark_session", return_value=spark),
         patch("sync.job.WorkspaceClient", return_value=mock_ws),
         patch("sync.job.embed_dataframe", embed_mock),
+        patch("sync.job.upsert_partition"),
         patch("sync.job.get_lakebase_jdbc_url", return_value=("jdbc:...", {})),
         patch("sync.job.fetch_existing_hashes", return_value={"main.db.tbl": "old_stale_hash"}),
     ):
@@ -199,6 +202,7 @@ def test_embeds_changed_tables(monkeypatch):
             patch("sync.job.create_spark_session", return_value=spark),
             patch("sync.job.WorkspaceClient", return_value=mock_ws),
             patch("sync.job.embed_dataframe", embed_mock),
+            patch("sync.job.upsert_partition"),
             patch("sync.job.get_lakebase_jdbc_url", return_value=("jdbc:...", {})),
             patch("sync.job.fetch_existing_hashes", return_value={"main.db.tbl": "old_stale_hash"}),
         ):
@@ -273,7 +277,17 @@ def test_upsert_uses_on_conflict(monkeypatch):
     from sync.db import upsert_partition
 
     rows = [
-        {"full_name": "a.b.c", "content": "x", "embedding": [0.1], "content_hash": "abc"},
+        {
+            "full_name": "a.b.c",
+            "catalog": "a",
+            "schema_name": "b",
+            "table_name": "c",
+            "table_type": "MANAGED",
+            "comment": "x",
+            "columns": "[]",
+            "embedding": [0.1],
+            "content_hash": "abc",
+        },
     ]
     mock_ws = MagicMock()
     mock_ws.database.get_database_instance.return_value.read_write_dns = "host"
