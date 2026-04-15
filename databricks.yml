@@ -10,7 +10,7 @@ variables:
     default: ""
   sync_schedule:
     description: "Cron schedule for the sync job (quartz format)"
-    default: "0 */6 * * *"
+    default: "0 0 */6 * * ?"
 
 include:
   - resources/*.yml

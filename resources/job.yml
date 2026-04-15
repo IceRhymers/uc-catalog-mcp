@@ -2,7 +2,7 @@ artifacts:
   uc_catalog_mcp_whl:
     type: whl
     build: uv build
-    path: .
+    path: ..
 
 resources:
   jobs:
@@ -25,7 +25,7 @@ resources:
           spec:
             client: "5"
             dependencies:
-              - ./dist/*.whl
+              - ../dist/*.whl
       parameters:
         - name: CATALOG_ALLOWLIST
           default: "${var.catalog_allowlist}"
