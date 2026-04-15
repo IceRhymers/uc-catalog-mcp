@@ -5,8 +5,7 @@ from pathlib import Path
 def test_column_metadata_fields():
     from app.db.models import ColumnMetadata
 
-    fields = {f.name for f in dataclasses.fields(ColumnMetadata)}
-    assert fields == {"name", "type", "comment"}
+    assert set(ColumnMetadata._fields) == {"name", "type", "comment"}
 
 
 def test_catalog_metadata_fields():
