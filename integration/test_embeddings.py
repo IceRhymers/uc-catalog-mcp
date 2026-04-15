@@ -3,6 +3,7 @@
 Run with: make test-integration
 These tests are NOT run in CI (integration/ is outside tests/).
 """
+
 import pytest
 
 from sync.spark import create_spark_session

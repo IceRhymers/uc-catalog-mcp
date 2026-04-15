@@ -3,6 +3,7 @@
 Creates a Databricks Connect (serverless) session when running locally,
 and uses the active cluster session when running on Databricks.
 """
+
 import os
 
 from pyspark.sql import SparkSession
@@ -22,6 +23,7 @@ def create_spark_session() -> SparkSession:
     if os.environ.get("DATABRICKS_RUNTIME_VERSION") is None:
         try:
             from databricks.connect import DatabricksSession
+
             return DatabricksSession.builder.serverless().getOrCreate()
         except ImportError:
             return SparkSession.builder.getOrCreate()

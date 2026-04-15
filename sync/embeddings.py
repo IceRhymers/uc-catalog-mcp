@@ -4,6 +4,7 @@ Uses the built-in Spark SQL function ai_query to call the Databricks
 Foundation Models API (BGE-large, 1024-dim) in a distributed manner.
 No manual batching, auth, or retry logic needed — Spark handles it.
 """
+
 from pyspark.sql import DataFrame
 
 from sync.hash import build_content_string  # noqa: F401 — re-exported

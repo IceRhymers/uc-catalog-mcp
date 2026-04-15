@@ -1,4 +1,5 @@
 """Unit tests for sync/embeddings.py and sync/spark.py."""
+
 import os
 from unittest.mock import MagicMock, patch
 
@@ -65,7 +66,10 @@ def test_create_spark_session_uses_connect_when_no_runtime():
 
     env = {k: v for k, v in os.environ.items() if k != "DATABRICKS_RUNTIME_VERSION"}
     with patch.dict(os.environ, env, clear=True):
-        with patch.dict("sys.modules", {"databricks.connect": MagicMock(DatabricksSession=mock_databricks_session)}):
+        with patch.dict(
+            "sys.modules",
+            {"databricks.connect": MagicMock(DatabricksSession=mock_databricks_session)},
+        ):
             result = create_spark_session()
 
     mock_databricks_session.builder.serverless.assert_called_once()
