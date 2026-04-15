@@ -22,9 +22,9 @@ def test_table_lineage_calls_correct_endpoint():
     }
     result = get_table_lineage("catalog.schema.table", ws=mock_ws)
     mock_ws.api_client.do.assert_called_once_with(
-        "POST",
+        "GET",
         "/api/2.0/lineage-tracking/table-lineage",
-        body={"table_name": "catalog.schema.table"},
+        query={"table_name": "catalog.schema.table", "include_entity_lineage": "true"},
     )
     assert "upstream_tables" in result
 
@@ -51,9 +51,9 @@ def test_column_lineage_calls_correct_endpoint():
     mock_ws.api_client.do.return_value = {"upstream_cols": [], "downstream_cols": []}
     result = get_column_lineage("catalog.schema.table", "id", ws=mock_ws)
     mock_ws.api_client.do.assert_called_once_with(
-        "POST",
+        "GET",
         "/api/2.0/lineage-tracking/column-lineage",
-        body={"table_name": "catalog.schema.table", "column_name": "id"},
+        query={"table_name": "catalog.schema.table", "column_name": "id"},
     )
     assert result is not None
 

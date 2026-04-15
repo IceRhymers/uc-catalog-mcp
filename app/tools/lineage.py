@@ -20,9 +20,9 @@ def get_table_lineage(full_name: str, ws: WorkspaceClient | None = None) -> dict
     client = ws or WorkspaceClient()
     try:
         return client.api_client.do(
-            "POST",
+            "GET",
             "/api/2.0/lineage-tracking/table-lineage",
-            body={"table_name": full_name},
+            query={"table_name": full_name, "include_entity_lineage": "true"},
         )
     except Exception as e:
         return {"error": str(e)}
@@ -44,9 +44,9 @@ def get_column_lineage(full_name: str, column: str, ws: WorkspaceClient | None =
     client = ws or WorkspaceClient()
     try:
         return client.api_client.do(
-            "POST",
+            "GET",
             "/api/2.0/lineage-tracking/column-lineage",
-            body={"table_name": full_name, "column_name": column},
+            query={"table_name": full_name, "column_name": column},
         )
     except Exception as e:
         return {"error": str(e)}
