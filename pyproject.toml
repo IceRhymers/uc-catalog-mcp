@@ -15,7 +15,7 @@ dependencies = [
     "pgvector>=0.3",
     "sqlalchemy>=2.0",
     "alembic>=1.13",
-    "databricks-sdk>=0.28",
+    "databricks-sdk>=0.78",
 ]
 
 [project.scripts]

@@ -13,6 +13,9 @@ resources:
           python_wheel_task:
             package_name: uc-catalog-mcp
             entry_point: uc-catalog-sync
+            named_parameters:
+              catalog_allowlist: "${var.catalog_allowlist}"
+              lakebase_instance_name: "${var.lakebase_instance}"
           environment_key: serverless
       schedule:
         quartz_cron_expression: "${var.sync_schedule}"
@@ -26,9 +29,4 @@ resources:
             client: "5"
             dependencies:
               - ../dist/*.whl
-      parameters:
-        - name: CATALOG_ALLOWLIST
-          default: "${var.catalog_allowlist}"
-        - name: LAKEBASE_INSTANCE_NAME
-          default: "${var.lakebase_instance}"
 

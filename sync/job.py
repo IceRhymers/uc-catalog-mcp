@@ -52,17 +52,25 @@ def _build_allowlist_sql_filter(entries: list[AllowlistEntry]) -> tuple[str, lis
     return "(" + " OR ".join(clauses) + ")", []
 
 
-def run_sync() -> dict:
+def run_sync(
+    *,
+    catalog_allowlist: str | None = None,
+    lakebase_instance_name: str | None = None,
+) -> dict:
     """Run the full ETL sync cycle.
 
-    Reads CATALOG_ALLOWLIST (JSON list) and LAKEBASE_INSTANCE_NAME from env.
+    Args:
+        catalog_allowlist: JSON list of catalogs (e.g. '["main"]').
+            Falls back to CATALOG_ALLOWLIST env var.
+        lakebase_instance_name: Lakebase instance name.
+            Falls back to LAKEBASE_INSTANCE_NAME env var.
 
     Returns:
         Dict with keys: scanned, skipped, embedded, deleted.
     """
     # 1. Parse allowlist
-    raw_allowlist = json.loads(os.environ["CATALOG_ALLOWLIST"])
-    instance_name = os.environ["LAKEBASE_INSTANCE_NAME"]
+    raw_allowlist = json.loads(catalog_allowlist or os.environ["CATALOG_ALLOWLIST"])
+    instance_name = lakebase_instance_name or os.environ["LAKEBASE_INSTANCE_NAME"]
     entries = parse_allowlist(raw_allowlist)
     where_clause, _ = _build_allowlist_sql_filter(entries)
 
@@ -170,10 +178,26 @@ def run_sync() -> dict:
     return stats
 
 
+def _parse_argv() -> dict:
+    """Parse --key=value pairs from sys.argv (Databricks named_parameters)."""
+    import sys
+
+    params = {}
+    for arg in sys.argv[1:]:
+        if arg.startswith("--") and "=" in arg:
+            key, value = arg[2:].split("=", 1)
+            params[key] = value
+    return params
+
+
 def main() -> None:
-    """Console script entry point for the uc-catalog-sync wheel task."""
+    """Console script entry point for the uc-catalog-sync wheel task.
+
+    Databricks serverless python_wheel_task passes named_parameters
+    as --key=value in sys.argv. Falls back to env vars for local dev.
+    """
     logging.basicConfig(level=logging.INFO)
-    run_sync()
+    run_sync(**_parse_argv())
 
 
 if __name__ == "__main__":
