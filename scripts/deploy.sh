@@ -34,6 +34,8 @@ EOF
 cmd_build() {
   echo "==> Installing dependencies..."
   uv sync
+  echo "==> Generating app/requirements.txt from pyproject.toml..."
+  uv pip compile pyproject.toml -o app/requirements.txt
 }
 
 cmd_validate() {

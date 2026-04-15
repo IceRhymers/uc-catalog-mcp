@@ -1,0 +1,7 @@
+command:
+  - bash
+  - -c
+  - "ln -sf . app && uvicorn app.main:app --host=0.0.0.0 --port=8000"
+env:
+  - name: LAKEBASE_INSTANCE
+    value: uc-catalog-mcp-db
