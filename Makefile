@@ -1,4 +1,4 @@
-.PHONY: test test-integration lint run setup-db deploy migrate sync check fmt fmt-check
+.PHONY: test test-integration lint run setup-db deploy migrate sync check fmt fmt-check requirements
 
 venv:
 	uv sync
@@ -37,6 +37,10 @@ sync:
 # CI gate: lint + format check.
 check:
 	make lint
+
+# Generate app/requirements.txt from pyproject.toml (production deps only).
+requirements:
+	uv pip compile pyproject.toml -o app/requirements.txt
 
 # Auto-fix formatting.
 fmt:

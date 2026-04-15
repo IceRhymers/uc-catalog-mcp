@@ -3,16 +3,35 @@
 from __future__ import annotations
 
 import json
+import logging
+import os
+from contextlib import asynccontextmanager
 
+from databricks.sdk import WorkspaceClient
 from fastapi import Depends, FastAPI
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, sessionmaker
 
-from app.db.client import get_db
+from app.db.client import create_lakebase_engine, get_db
 from app.tools.describe import describe_table
 from app.tools.list import list_catalogs, list_schemas
 from app.tools.search import search_tables
 
-app = FastAPI(title="uc-catalog-mcp")
+logger = logging.getLogger(__name__)
+
+LAKEBASE_INSTANCE = os.environ.get("LAKEBASE_INSTANCE", "uc-catalog-mcp-db")
+
+
+@asynccontextmanager
+async def lifespan(app):
+    logger.info("Connecting to Lakebase instance %s", LAKEBASE_INSTANCE)
+    ws = WorkspaceClient()
+    engine = create_lakebase_engine(LAKEBASE_INSTANCE, ws)
+    app.state.session_factory = sessionmaker(bind=engine)
+    yield
+    engine.dispose()
+
+
+app = FastAPI(title="uc-catalog-mcp", lifespan=lifespan)
 
 # ---------------------------------------------------------------------------
 # Tool registry — used by tools/list and tools/call
@@ -85,6 +104,20 @@ async def mcp_handler(body: dict, db: Session = Depends(get_db)):
     """JSON-RPC 2.0 dispatcher for MCP tools/list and tools/call."""
     rpc_id = body.get("id")
     method = body.get("method", "")
+
+    if method == "initialize":
+        return {
+            "jsonrpc": "2.0",
+            "id": rpc_id,
+            "result": {
+                "protocolVersion": "2024-11-05",
+                "capabilities": {"tools": {}},
+                "serverInfo": {"name": "uc-catalog-mcp", "version": "0.1.0"},
+            },
+        }
+
+    if method == "notifications/initialized":
+        return {"jsonrpc": "2.0", "id": rpc_id, "result": {}}
 
     if method == "tools/list":
         return {

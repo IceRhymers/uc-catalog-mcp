@@ -1,11 +1,19 @@
 import dataclasses
 import datetime
+from typing import NamedTuple
 
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sync.types import ColumnInfo as ColumnMetadata
+
+
+class ColumnInfo(NamedTuple):
+    """A single Unity Catalog column."""
+
+    name: str
+    type: str
+    comment: str | None = None
 
 
 class Base(DeclarativeBase):
@@ -41,7 +49,7 @@ class CatalogMetadata:
     table_name: str
     table_type: str | None
     comment: str | None
-    columns: list[ColumnMetadata]
+    columns: list[ColumnInfo]
     content_hash: str | None
     embedding: list[float] | None
     synced_at: datetime.datetime | None

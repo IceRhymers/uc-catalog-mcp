@@ -5,7 +5,6 @@ from __future__ import annotations
 from sqlalchemy.orm import Session
 
 from app.db.models import CatalogMetadataOrm
-from sync.types import ColumnInfo
 
 
 def describe_table(full_name: str, db: Session) -> dict:
@@ -25,9 +24,11 @@ def describe_table(full_name: str, db: Session) -> dict:
     row = db.get(CatalogMetadataOrm, full_name)
     if row is None:
         return {"error": f"Table not found: {full_name}"}
-    cols = [ColumnInfo(**c) for c in (row.columns or [])]
     return {
         "full_name": row.full_name,
         "comment": row.comment,
-        "columns": [{"name": c.name, "type": c.type, "comment": c.comment} for c in cols],
+        "columns": [
+            {"name": c["name"], "type": c["type"], "comment": c.get("comment")}
+            for c in (row.columns or [])
+        ],
     }
