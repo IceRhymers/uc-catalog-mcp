@@ -27,6 +27,6 @@ def embed_text(text: str, ws: WorkspaceClient | None = None) -> list[float]:
     client = ws or WorkspaceClient()
     response = client.serving_endpoints.query(
         name=EMBEDDING_ENDPOINT,
-        dataframe_records=[{"input": text}],
+        input=[text],
     )
-    return response.predictions[0]
+    return response.data[0].embedding

@@ -22,7 +22,7 @@ def test_search_calls_pgvector_ann():
 
     assert db.execute.called
     sql_arg = str(db.execute.call_args[0][0])
-    assert "embedding <=> :vec::vector" in sql_arg
+    assert "embedding <=> CAST(:vec AS vector)" in sql_arg
     assert "LIMIT :limit" in sql_arg
 
 

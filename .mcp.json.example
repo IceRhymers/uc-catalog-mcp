@@ -5,8 +5,8 @@
       "command": "uvx",
       "args": [
         "uc-mcp-proxy",
-        "--url", "https://uc-catalog-mcp-978210998632729.aws.databricksapps.com/mcp",
-        "--profile", "personal"
+        "--url", "https://uc-catalog-mcp-000000000000000.aws.databricksapps.com/mcp",
+        "--profile", "DEFAULT"
       ]
     }
   }

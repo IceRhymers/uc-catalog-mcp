@@ -1,17 +1,12 @@
 """Lakebase database client for uc-catalog-mcp.
 
 Provides create_lakebase_engine() for building a SQLAlchemy engine with
-automatic OAuth token refresh, and get_db() as a FastAPI dependency that
-yields a SQLAlchemy Session.
+automatic OAuth token refresh.
 """
 
 from __future__ import annotations
 
-from collections.abc import Generator
-
-from fastapi import Request
 from sqlalchemy import Engine, create_engine, event
-from sqlalchemy.orm import Session
 
 
 def create_lakebase_engine(instance_name: str, ws_client) -> Engine:
@@ -36,15 +31,3 @@ def create_lakebase_engine(instance_name: str, ws_client) -> Engine:
         cparams["password"] = cred.token
 
     return engine
-
-
-def get_db(request: Request) -> Generator[Session, None, None]:
-    """FastAPI dependency: yield a SQLAlchemy session, closing on teardown.
-
-    Requires app.state.session_factory to be set during startup.
-    """
-    session = request.app.state.session_factory()
-    try:
-        yield session
-    finally:
-        session.close()

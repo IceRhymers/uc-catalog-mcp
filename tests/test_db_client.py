@@ -3,38 +3,6 @@
 from unittest.mock import MagicMock
 
 
-def test_get_db_yields_session():
-    """get_db() yields a SQLAlchemy Session from app.state.session_factory."""
-    from app.db.client import get_db
-
-    mock_session = MagicMock()
-    mock_factory = MagicMock(return_value=mock_session)
-    mock_request = MagicMock()
-    mock_request.app.state.session_factory = mock_factory
-
-    gen = get_db(mock_request)
-    session = next(gen)
-    assert session is mock_session
-
-
-def test_get_db_closes_on_teardown():
-    """Session is closed after the generator is exhausted."""
-    from app.db.client import get_db
-
-    mock_session = MagicMock()
-    mock_request = MagicMock()
-    mock_request.app.state.session_factory = MagicMock(return_value=mock_session)
-
-    gen = get_db(mock_request)
-    next(gen)
-    try:
-        next(gen)
-    except StopIteration:
-        pass
-
-    mock_session.close.assert_called_once()
-
-
 def test_create_engine_resolves_host_via_sdk():
     """create_lakebase_engine() resolves host from ws.database.get_database_instance()."""
     from sqlalchemy import Engine

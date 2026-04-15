@@ -36,9 +36,9 @@ def search_tables(
     vec = embed_fn(query)
     rows = db.execute(
         text("""
-            SELECT full_name, comment, 1 - (embedding <=> :vec::vector) AS similarity
+            SELECT full_name, comment, 1 - (embedding <=> CAST(:vec AS vector)) AS similarity
             FROM catalog_metadata
-            ORDER BY embedding <=> :vec::vector
+            ORDER BY embedding <=> CAST(:vec AS vector)
             LIMIT :limit
         """),
         {"vec": str(vec), "limit": limit},

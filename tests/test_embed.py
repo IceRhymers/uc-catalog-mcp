@@ -3,17 +3,25 @@
 from unittest.mock import MagicMock
 
 
+def _mock_embedding_response(embedding):
+    """Build a mock response matching the Foundation Model embedding API shape."""
+    mock_ws = MagicMock()
+    entry = MagicMock()
+    entry.embedding = embedding
+    mock_ws.serving_endpoints.query.return_value.data = [entry]
+    return mock_ws
+
+
 def test_embed_text_calls_serving_endpoint():
     from app.embed import embed_text, EMBEDDING_ENDPOINT
 
-    mock_ws = MagicMock()
-    mock_ws.serving_endpoints.query.return_value.predictions = [[0.1, 0.2, 0.3]]
+    mock_ws = _mock_embedding_response([0.1, 0.2, 0.3])
 
     result = embed_text("hello world", ws=mock_ws)
 
     mock_ws.serving_endpoints.query.assert_called_once_with(
         name=EMBEDDING_ENDPOINT,
-        dataframe_records=[{"input": "hello world"}],
+        input=["hello world"],
     )
     assert result == [0.1, 0.2, 0.3]
 
@@ -21,8 +29,7 @@ def test_embed_text_calls_serving_endpoint():
 def test_embed_text_returns_list_of_floats():
     from app.embed import embed_text
 
-    mock_ws = MagicMock()
-    mock_ws.serving_endpoints.query.return_value.predictions = [[0.1] * 1024]
+    mock_ws = _mock_embedding_response([0.1] * 1024)
 
     result = embed_text("test", ws=mock_ws)
 
@@ -34,8 +41,7 @@ def test_embed_text_returns_list_of_floats():
 def test_embed_text_accepts_external_ws_client():
     from app.embed import embed_text
 
-    mock_ws = MagicMock()
-    mock_ws.serving_endpoints.query.return_value.predictions = [[0.5]]
+    mock_ws = _mock_embedding_response([0.5])
 
     embed_text("text", ws=mock_ws)
 
