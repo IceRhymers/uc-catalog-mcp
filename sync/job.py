@@ -153,6 +153,12 @@ def run_sync() -> dict:
     return stats
 
 
+def main() -> None:
+    """Console script entry point for the uc-catalog-sync wheel task."""
+    logging.basicConfig(level=logging.INFO)
+    run_sync()
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     run_sync()

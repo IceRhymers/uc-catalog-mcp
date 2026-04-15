@@ -18,6 +18,9 @@ dependencies = [
     "databricks-sdk>=0.28",
 ]
 
+[project.scripts]
+uc-catalog-sync = "sync.job:main"
+
 [dependency-groups]
 dev = [
     "pytest>=8",
@@ -36,3 +39,4 @@ include = ["app*", "sync*"]
 
 [tool.ruff]
 line-length = 100
+
