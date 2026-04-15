@@ -1,7 +1,11 @@
-.PHONY: test lint run setup-db deploy migrate sync check fmt fmt-check
+.PHONY: test test-integration lint run setup-db deploy migrate sync check fmt fmt-check
 
 test:
 	pytest tests/ -v
+
+# Run integration tests (requires Databricks credentials — not run in CI).
+test-integration:
+	uv run pytest integration/ -v
 
 lint:
 	uv run ruff check . && uv run ruff format --check .
