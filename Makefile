@@ -3,9 +3,9 @@
 test:
 	pytest tests/ -v
 
-# Run integration tests (requires Databricks credentials + Python 3.12 — not run in CI).
+# Run integration tests (requires Databricks credentials — not run in CI).
 test-integration:
-	uv sync --group integration
+	uv sync --group spark
 	uv run pytest integration/ -v
 
 lint:
