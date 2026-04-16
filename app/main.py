@@ -15,6 +15,8 @@ from starlette.responses import JSONResponse
 
 from app.db.client import create_lakebase_engine
 from app.tools.describe import describe_table as _describe_table
+from app.tools.lineage import get_column_lineage as _get_column_lineage
+from app.tools.lineage import get_table_lineage as _get_table_lineage
 from app.tools.list import list_catalogs as _list_catalogs
 from app.tools.list import list_schemas as _list_schemas
 from app.tools.search import search_tables as _search_tables
@@ -93,6 +95,22 @@ async def list_schemas(catalog: str, ctx: Context) -> str:
 # ---------------------------------------------------------------------------
 # Health endpoint
 # ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+async def get_table_lineage(full_name: str, ctx: Context) -> str:
+    """Return upstream and downstream table lineage for a Unity Catalog table."""
+    ws = WorkspaceClient()
+    result = _get_table_lineage(full_name, ws=ws)
+    return json.dumps(result)
+
+
+@mcp.tool()
+async def get_column_lineage(full_name: str, column: str, ctx: Context) -> str:
+    """Return upstream and downstream column lineage for a specific column."""
+    ws = WorkspaceClient()
+    result = _get_column_lineage(full_name, column=column, ws=ws)
+    return json.dumps(result)
 
 
 @mcp.custom_route("/health", methods=["GET"])
