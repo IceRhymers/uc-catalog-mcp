@@ -21,6 +21,8 @@ def describe_table(full_name: str, db: Session) -> dict:
         Dict with full_name, comment, columns (list of {name, type, comment}).
         Returns {"error": "Table not found: ..."} if full_name is not indexed.
     """
+    # NOTE: No per-user UC permission filtering — all MCP users see the same cached
+    # metadata. This is an intentional tradeoff for sub-100ms lookup. See SECURITY.md.
     row = db.get(CatalogMetadataOrm, full_name)
     if row is None:
         return {"error": f"Table not found: {full_name}"}
