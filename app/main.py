@@ -24,6 +24,20 @@ from app.tools.search import search_tables as _search_tables
 logger = logging.getLogger(__name__)
 
 LAKEBASE_INSTANCE = os.environ.get("LAKEBASE_INSTANCE", "uc-catalog-mcp-db")
+OBO_HEADER = "x-forwarded-access-token"
+
+
+def _extract_obo_client(ctx: Context) -> WorkspaceClient | str:
+    """Extract OBO token from X-Forwarded-Access-Token and return a WorkspaceClient.
+
+    Returns a WorkspaceClient acting as the calling user on success, or a JSON
+    error string on failure. Never falls back to the app service principal —
+    a missing token is an explicit error to prevent silent privilege escalation.
+    """
+    token = ctx.request_context.request.headers.get(OBO_HEADER)
+    if not token:
+        return json.dumps({"error": "OBO token required — connect via Databricks OAuth"})
+    return WorkspaceClient(host=os.environ["DATABRICKS_HOST"], token=token)
 
 
 @asynccontextmanager
@@ -99,17 +113,29 @@ async def list_schemas(catalog: str, ctx: Context) -> str:
 
 @mcp.tool()
 async def get_table_lineage(full_name: str, ctx: Context) -> str:
-    """Return upstream and downstream table lineage for a Unity Catalog table."""
-    ws = WorkspaceClient()
-    result = _get_table_lineage(full_name, ws=ws)
+    """Return upstream and downstream table lineage for a Unity Catalog table.
+
+    Enforces the calling user's UC permissions via OBO token — lineage is only
+    returned for tables the user has access to in Unity Catalog.
+    """
+    ws_or_error = _extract_obo_client(ctx)
+    if isinstance(ws_or_error, str):
+        return ws_or_error
+    result = _get_table_lineage(full_name, ws=ws_or_error)
     return json.dumps(result)
 
 
 @mcp.tool()
 async def get_column_lineage(full_name: str, column: str, ctx: Context) -> str:
-    """Return upstream and downstream column lineage for a specific column."""
-    ws = WorkspaceClient()
-    result = _get_column_lineage(full_name, column=column, ws=ws)
+    """Return upstream and downstream column lineage for a specific column.
+
+    Enforces the calling user's UC permissions via OBO token — lineage is only
+    returned for tables the user has access to in Unity Catalog.
+    """
+    ws_or_error = _extract_obo_client(ctx)
+    if isinstance(ws_or_error, str):
+        return ws_or_error
+    result = _get_column_lineage(full_name, column=column, ws=ws_or_error)
     return json.dumps(result)
 
 

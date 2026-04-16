@@ -1,6 +1,9 @@
-"""Unit tests for app/tools/lineage.py."""
+"""Unit tests for app/tools/lineage.py and OBO auth wrappers in app/main.py."""
 
-from unittest.mock import MagicMock
+import asyncio
+import json
+import os
+from unittest.mock import MagicMock, patch
 
 
 def _make_ws(table_response=None, column_response=None, side_effect=None):
@@ -89,3 +92,79 @@ def test_column_lineage_api_error_returns_structured_error():
     result = get_column_lineage("catalog.schema.missing", "id", ws=mock_ws)
     assert "error" in result
     assert "NOT_FOUND" in result["error"]
+
+
+# ---------------------------------------------------------------------------
+# OBO auth tests — app/main.py wrappers
+# ---------------------------------------------------------------------------
+
+
+def _make_ctx(headers: dict | None = None) -> MagicMock:
+    """Build a mock FastMCP Context with Starlette request headers."""
+    ctx = MagicMock()
+    ctx.request_context.request.headers = headers or {}
+    return ctx
+
+
+@patch.dict(os.environ, {"DATABRICKS_HOST": "https://test.cloud.databricks.com"})
+@patch("app.main.WorkspaceClient")
+def test_table_lineage_uses_obo_token(mock_ws_cls):
+    from app.main import get_table_lineage
+
+    ctx = _make_ctx({"x-forwarded-access-token": "user-oauth-token-123"})
+    mock_ws_cls.return_value.api_client.do.return_value = {"upstreams": []}
+
+    result = json.loads(asyncio.run(get_table_lineage("catalog.schema.table", ctx)))
+
+    mock_ws_cls.assert_called_once_with(
+        host="https://test.cloud.databricks.com",
+        token="user-oauth-token-123",
+    )
+    assert "error" not in result
+
+
+@patch.dict(os.environ, {"DATABRICKS_HOST": "https://test.cloud.databricks.com"})
+@patch("app.main.WorkspaceClient")
+def test_column_lineage_uses_obo_token(mock_ws_cls):
+    from app.main import get_column_lineage
+
+    ctx = _make_ctx({"x-forwarded-access-token": "user-oauth-token-456"})
+    mock_ws_cls.return_value.api_client.do.return_value = {"upstream_cols": []}
+
+    result = json.loads(asyncio.run(get_column_lineage("catalog.schema.table", "col1", ctx)))
+
+    mock_ws_cls.assert_called_once_with(
+        host="https://test.cloud.databricks.com",
+        token="user-oauth-token-456",
+    )
+    assert "error" not in result
+
+
+def test_table_lineage_missing_obo_header_returns_error():
+    from app.main import get_table_lineage
+
+    ctx = _make_ctx({})
+    result = json.loads(asyncio.run(get_table_lineage("catalog.schema.table", ctx)))
+
+    assert "error" in result
+    assert "OBO token required" in result["error"]
+
+
+def test_column_lineage_missing_obo_header_returns_error():
+    from app.main import get_column_lineage
+
+    ctx = _make_ctx({})
+    result = json.loads(asyncio.run(get_column_lineage("catalog.schema.table", "col1", ctx)))
+
+    assert "error" in result
+    assert "OBO token required" in result["error"]
+
+
+@patch("app.main.WorkspaceClient")
+def test_missing_header_does_not_instantiate_workspace_client(mock_ws_cls):
+    from app.main import get_table_lineage
+
+    ctx = _make_ctx({})
+    asyncio.run(get_table_lineage("catalog.schema.table", ctx))
+
+    mock_ws_cls.assert_not_called()
