@@ -9,6 +9,7 @@ Never run in CI — requires live Databricks workspace with lineage tracking ena
 """
 
 import os
+import logging
 
 import pytest
 
@@ -25,7 +26,7 @@ def test_get_table_lineage_returns_dict():
     from app.tools.lineage import get_table_lineage
 
     result = get_table_lineage(LINEAGE_TEST_TABLE)
-
+    logging.info(result)
     assert isinstance(result, dict), f"Expected dict, got: {type(result)}"
     assert "error" not in result, f"API returned error: {result.get('error')}"
     # Lineage API returns upstream/downstream as lists (may be empty for leaf tables)
@@ -41,7 +42,7 @@ def test_get_column_lineage_returns_dict():
     # Use the table name and pick an arbitrary column name; API returns empty lists
     # rather than erroring on unknown columns, so this tests the call path.
     result = get_column_lineage(LINEAGE_TEST_TABLE, "id")
-
+    logging.info(result)
     assert isinstance(result, dict), f"Expected dict, got: {type(result)}"
     assert "error" not in result, f"API returned error: {result.get('error')}"
 
@@ -51,6 +52,6 @@ def test_get_table_lineage_invalid_table_returns_error():
     from app.tools.lineage import get_table_lineage
 
     result = get_table_lineage("catalog.schema.__nonexistent_claw_test__")
-
+    logging.info(result)
     # Either an error dict OR an empty lineage response — both acceptable
     assert isinstance(result, dict)
