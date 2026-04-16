@@ -34,6 +34,8 @@ def search_tables(
         List of dicts with keys: full_name, comment, similarity (0–1 float).
     """
     vec = embed_fn(query)
+    # NOTE: No per-user UC permission filtering — all MCP users see the same cached
+    # metadata. This is an intentional tradeoff for sub-100ms ANN search. See SECURITY.md.
     rows = db.execute(
         text("""
             SELECT full_name, comment, 1 - (embedding <=> CAST(:vec AS vector)) AS similarity

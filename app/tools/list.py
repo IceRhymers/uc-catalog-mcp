@@ -19,6 +19,7 @@ def list_catalogs(db: Session) -> list[str]:
     Returns:
         Sorted list of catalog name strings.
     """
+    # NOTE: No per-user UC permission filtering. See SECURITY.md for the access model.
     return sorted(db.scalars(select(distinct(CatalogMetadataOrm.catalog))).all())
 
 
@@ -35,6 +36,7 @@ def list_schemas(catalog: str, db: Session) -> list[str]:
     Returns:
         Sorted list of schema name strings. Empty list if catalog not found.
     """
+    # NOTE: No per-user UC permission filtering. See SECURITY.md for the access model.
     return sorted(
         db.scalars(
             select(distinct(CatalogMetadataOrm.schema_name)).where(

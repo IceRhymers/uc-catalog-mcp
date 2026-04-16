@@ -11,5 +11,8 @@ resources:
             instance_name: ${resources.database_instances.uc_catalog_db.name}
             permission: CAN_CONNECT_AND_CREATE
       permissions:
+        # account users: CAN_USE grants access to the same user set that receives
+        # UC BROWSE by default. The metadata exposed (table/column names, comments)
+        # is equivalent to BROWSE plus column comments. See SECURITY.md.
         - group_name: account users
           level: CAN_USE
